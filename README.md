@@ -46,26 +46,12 @@ App 本身是純前端網頁,部署在 GitHub Pages 上,任何人都可以安裝
 
 ## 步驟二:把 App 放到 GitHub Pages
 
-1. 到 [GitHub](https://github.com) 註冊/登入帳號。
-2. 建立一個新的 Repository(例如命名為 `habit-tracker`),設為 **Public**,
-   建立時不要勾選「Add a README」(我們已經有了)。
-3. 在你的電腦上,於 `habit-tracker` 這個資料夾(也就是這個專案的根目錄)依序執行:
-
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: 習慣手帳 PWA"
-   git branch -M main
-   git remote add origin https://github.com/<你的帳號>/habit-tracker.git
-   git push -u origin main
-   ```
-
-4. 到 GitHub 上該 repository 的「Settings」→「Pages」。
+1. 到 GitHub 上該 repository(`Habit-Tracker`)的「Settings」→「Pages」。
    - Source 選擇「Deploy from a branch」
    - Branch 選擇 `main`,資料夾選 `/ (root)`
    - 按「Save」
-5. 等 1~2 分鐘後,網址會出現在同一頁面,大致長得像:
-   `https://<你的帳號>.github.io/habit-tracker/`
+2. 等 1~2 分鐘後,網址會出現在同一頁面,大致長得像:
+   `https://vincent93843033-code.github.io/Habit-Tracker/`
 
    這就是你之後安裝到手機桌面的網址。
 
@@ -93,7 +79,7 @@ App 本身是純前端網頁,部署在 GitHub Pages 上,任何人都可以安裝
 
 ## 分享給其他人使用
 
-- App 網址(`https://<你的帳號>.github.io/habit-tracker/`)可以直接分享,
+- App 網址(`https://vincent93843033-code.github.io/Habit-Tracker/`)可以直接分享,
   對方用 Chrome 打開、安裝到桌面即可。
 - 但對方需要**重複「步驟一」**,建立自己的 Google Sheet + Apps Script,
   在自己手機的「設定」頁貼上自己的網址 —— 這樣大家的資料才會分開存放。
