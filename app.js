@@ -27,6 +27,8 @@
   var data;
   var statsChart = null;
   var statsMode = "trend";
+  var chartRangeDays = 14;
+  var customRange = null;
 
   /* ---------- storage ---------- */
 
@@ -284,12 +286,47 @@
     return days;
   }
 
+  function getDaysBetween(startKey, endKey) {
+    var days = [];
+    var start = new Date(startKey + "T00:00:00");
+    var end = new Date(endKey + "T00:00:00");
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return days;
+
+    var cur = new Date(start);
+    while (cur <= end) {
+      var key = dateKey(cur);
+      var rec = data.records[key];
+      days.push({
+        key: key,
+        label: (cur.getMonth() + 1) + "/" + cur.getDate(),
+        score: rec && rec.score !== undefined ? rec.score : null
+      });
+      cur.setDate(cur.getDate() + 1);
+    }
+    return days;
+  }
+
+  function getChartDays() {
+    if (customRange) return getDaysBetween(customRange.start, customRange.end);
+    return getLastNDays(chartRangeDays);
+  }
+
+  function updateChartRangeLabel() {
+    var label = document.getElementById("chartRangeLabel");
+    if (customRange) {
+      label.textContent = customRange.start + " ～ " + customRange.end;
+    } else {
+      label.textContent = "過去 " + chartRangeDays + " 天";
+    }
+  }
+
   function renderStats() {
     var days14 = getLastNDays(14);
     var todayRec = getTodayRecord();
-    days14[days14.length - 1].score = computeScore(todayRec);
+    var todayScore = computeScore(todayRec);
+    days14[days14.length - 1].score = todayScore;
 
-    document.getElementById("statTodayScore").textContent = days14[days14.length - 1].score;
+    document.getElementById("statTodayScore").textContent = todayScore;
 
     var last7 = days14.slice(-7).filter(function (d) { return d.score !== null; });
     var avg = last7.length
@@ -297,7 +334,14 @@
       : "--";
     document.getElementById("statAvgScore").textContent = avg;
 
-    renderChart(days14);
+    var chartDays = getChartDays();
+    var tKey = todayKey();
+    chartDays.forEach(function (d) {
+      if (d.key === tKey) d.score = todayScore;
+    });
+
+    updateChartRangeLabel();
+    renderChart(chartDays);
     renderHeatmap();
   }
 
@@ -388,7 +432,11 @@
     data.habits[type].forEach(function (h) {
       var row = document.createElement("div");
       row.className = "habit-edit-row";
+      row.dataset.id = h.id;
       row.innerHTML =
+        '<button class="drag-handle" type="button" aria-label="拖曳調整順序">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>' +
+        "</button>" +
         '<input type="text" value="' + escapeHtml(h.name) + '" data-id="' + h.id + '">' +
         '<button class="icon-btn-sm danger" data-id="' + h.id + '" aria-label="刪除">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
@@ -416,6 +464,100 @@
         renderHabitEditList(type);
         renderToday();
       });
+    });
+
+    enableDragReorder(container, type);
+  }
+
+  function enableDragReorder(container, type) {
+    var LONG_PRESS_MS = 350;
+    var MOVE_CANCEL_PX = 8;
+
+    container.querySelectorAll(".drag-handle").forEach(function (handle) {
+      var row = handle.closest(".habit-edit-row");
+      var pressTimer = null;
+      var startX = 0;
+      var startY = 0;
+
+      handle.addEventListener("pointerdown", function (e) {
+        if (e.button !== undefined && e.button !== 0) return;
+        startX = e.clientX;
+        startY = e.clientY;
+        pressTimer = setTimeout(function () {
+          pressTimer = null;
+          beginDrag(e);
+        }, LONG_PRESS_MS);
+      });
+
+      handle.addEventListener("pointermove", function (e) {
+        if (pressTimer && (Math.abs(e.clientX - startX) > MOVE_CANCEL_PX || Math.abs(e.clientY - startY) > MOVE_CANCEL_PX)) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      });
+
+      ["pointerup", "pointercancel"].forEach(function (evt) {
+        handle.addEventListener(evt, function () {
+          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+        });
+      });
+
+      function beginDrag(e) {
+        var rect = row.getBoundingClientRect();
+        var placeholder = document.createElement("div");
+        placeholder.className = "habit-edit-row drag-placeholder";
+        placeholder.style.height = rect.height + "px";
+        container.insertBefore(placeholder, row);
+
+        row.style.position = "fixed";
+        row.style.left = rect.left + "px";
+        row.style.top = rect.top + "px";
+        row.style.width = rect.width + "px";
+        row.classList.add("dragging");
+        document.body.appendChild(row);
+
+        var offsetY = e.clientY - rect.top;
+
+        function onMove(ev) {
+          row.style.top = (ev.clientY - offsetY) + "px";
+
+          var siblings = Array.prototype.slice.call(container.children);
+          for (var i = 0; i < siblings.length; i++) {
+            var sib = siblings[i];
+            if (sib === placeholder) continue;
+            var sRect = sib.getBoundingClientRect();
+            var center = sRect.top + sRect.height / 2;
+            if (ev.clientY < center) {
+              container.insertBefore(placeholder, sib);
+              return;
+            }
+          }
+          container.appendChild(placeholder);
+        }
+
+        function onUp() {
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+          document.removeEventListener("pointercancel", onUp);
+
+          container.insertBefore(row, placeholder);
+          placeholder.remove();
+          row.style.position = "";
+          row.style.left = "";
+          row.style.top = "";
+          row.style.width = "";
+          row.classList.remove("dragging");
+
+          var ids = Array.prototype.map.call(container.querySelectorAll(".habit-edit-row"), function (r) { return r.dataset.id; });
+          data.habits[type].sort(function (a, b) { return ids.indexOf(a.id) - ids.indexOf(b.id); });
+          saveData();
+          renderToday();
+        }
+
+        document.addEventListener("pointermove", onMove);
+        document.addEventListener("pointerup", onUp);
+        document.addEventListener("pointercancel", onUp);
+      }
     });
   }
 
@@ -568,13 +710,51 @@
       statsMode = "trend";
       this.classList.add("active");
       document.getElementById("btnRatio").classList.remove("active");
-      renderChart(getLastNDays(14));
+      renderChart(getChartDays());
     });
     document.getElementById("btnRatio").addEventListener("click", function () {
       statsMode = "ratio";
       this.classList.add("active");
       document.getElementById("btnTrend").classList.remove("active");
-      renderChart(getLastNDays(14));
+      renderChart(getChartDays());
+    });
+
+    document.querySelectorAll(".range-btn[data-days]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        chartRangeDays = Number(btn.dataset.days);
+        customRange = null;
+        document.querySelectorAll(".range-btn").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        document.getElementById("customRangeRow").classList.add("hidden");
+        renderStats();
+      });
+    });
+
+    document.getElementById("btnCustomRange").addEventListener("click", function () {
+      document.querySelectorAll(".range-btn").forEach(function (b) { b.classList.remove("active"); });
+      this.classList.add("active");
+      var row = document.getElementById("customRangeRow");
+      row.classList.toggle("hidden");
+      var startInput = document.getElementById("rangeStart");
+      var endInput = document.getElementById("rangeEnd");
+      if (!startInput.value || !endInput.value) {
+        var end = new Date();
+        var start = new Date();
+        start.setDate(start.getDate() - 13);
+        startInput.value = dateKey(start);
+        endInput.value = dateKey(end);
+      }
+    });
+
+    document.getElementById("applyRangeBtn").addEventListener("click", function () {
+      var start = document.getElementById("rangeStart").value;
+      var end = document.getElementById("rangeEnd").value;
+      if (!start || !end || start > end) {
+        alert("請選擇正確的起訖日期(開始日期需早於或等於結束日期)");
+        return;
+      }
+      customRange = { start: start, end: end };
+      renderStats();
     });
 
     document.getElementById("saveUrlBtn").addEventListener("click", function () {

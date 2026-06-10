@@ -1,6 +1,6 @@
 {
-  "name": "習慣手帳",
-  "short_name": "習慣手帳",
+  "name": "習慣記錄",
+  "short_name": "習慣記錄",
   "description": "個人習慣追蹤,連動 Google Sheets",
   "start_url": "./index.html",
   "scope": "./",

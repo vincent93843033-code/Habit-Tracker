@@ -73,6 +73,7 @@ html, body {
   flex: 1;
 }
 .view.hidden { display: none; }
+.hidden { display: none !important; }
 
 /* ---------- Mood banner ---------- */
 .mood-banner {
@@ -239,6 +240,55 @@ input[type="range"]::-moz-range-thumb {
   border-color: var(--text-dark);
 }
 
+.range-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.range-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.range-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.custom-range-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.custom-range-row span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.custom-range-row input[type="date"] {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 13px;
+}
+.custom-range-row .secondary-btn {
+  width: auto;
+  padding: 9px 14px;
+  font-size: 13px;
+}
+
 .chart-wrap {
   position: relative;
   height: 200px;
@@ -356,7 +406,38 @@ input[type="range"]::-moz-range-thumb {
   gap: 8px;
   padding: 8px 0;
   border-bottom: 0.5px solid var(--border);
+  background: var(--bg);
 }
+.habit-edit-row.dragging {
+  position: relative;
+  z-index: 5;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  border-radius: 10px;
+  opacity: 0.95;
+}
+.habit-edit-row.drag-placeholder {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  visibility: visible;
+}
+.habit-edit-row.drag-placeholder > * {
+  visibility: hidden;
+}
+.drag-handle {
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  width: 26px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+}
+.drag-handle svg { width: 16px; height: 16px; }
 .habit-edit-row input[type="text"] {
   flex: 1;
   height: 34px;
