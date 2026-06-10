@@ -192,16 +192,25 @@
     });
 
     list.querySelectorAll("input[type=range]").forEach(function (slider) {
+      updateSliderFill(slider);
       slider.addEventListener("input", function () {
         var id = slider.dataset.id;
         var v = Number(slider.value);
         document.getElementById("val-" + id).textContent = v;
+        updateSliderFill(slider);
         var r = getTodayRecord();
         r[id] = v;
         persistTodayRecord(r);
         updateMood();
       });
     });
+  }
+
+  function updateSliderFill(slider) {
+    var min = Number(slider.min) || 0;
+    var max = Number(slider.max) || 100;
+    var pct = ((Number(slider.value) - min) / (max - min)) * 100;
+    slider.style.setProperty("--fill", pct + "%");
   }
 
   function renderBadHabits() {
