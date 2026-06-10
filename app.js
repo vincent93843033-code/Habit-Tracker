@@ -88,9 +88,13 @@
       goodAvg = (total / good.length / 10) * 100;
     }
     var penalty = 0;
-    data.habits.bad.forEach(function (h) {
-      if (record[h.id]) penalty += 15;
-    });
+    var badCount = data.habits.bad.length;
+    if (badCount > 0) {
+      var perHabitPenalty = Math.min(15, 30 / badCount);
+      data.habits.bad.forEach(function (h) {
+        if (record[h.id]) penalty += perHabitPenalty;
+      });
+    }
     return Math.max(0, Math.min(100, Math.round(goodAvg - penalty)));
   }
 
