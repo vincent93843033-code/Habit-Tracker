@@ -28,6 +28,7 @@
   var statsChart = null;
   var statsMode = "trend";
   var chartRangeDays = 14;
+  var currentDate;
 
   /* ---------- storage ---------- */
 
@@ -137,8 +138,7 @@
 
   /* ---------- records ---------- */
 
-  function getTodayRecord() {
-    var key = todayKey();
+  function getRecord(key) {
     var rec = data.records[key];
     if (!rec) {
       rec = { date: key };
@@ -153,7 +153,11 @@
     return rec;
   }
 
-  function persistTodayRecord(rec) {
+  function getTodayRecord() {
+    return getRecord(todayKey());
+  }
+
+  function persistRecord(rec) {
     rec.score = computeScore(rec);
     saveData();
   }
@@ -173,13 +177,27 @@
   /* ---------- today view ---------- */
 
   function renderToday() {
+    updateDayNav();
     renderGoodHabits();
     renderBadHabits();
     updateMood();
   }
 
+  function updateDayNav() {
+    var d = new Date(currentDate + "T00:00:00");
+    var weekday = ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
+    var label = (d.getMonth() + 1) + "月" + d.getDate() + "日 星期" + weekday;
+    var isToday = currentDate === todayKey();
+
+    document.getElementById("viewDateLabel").textContent = isToday ? "今天 · " + label : label;
+    document.getElementById("nextDayBtn").disabled = isToday;
+    document.getElementById("backToTodayBtn").classList.toggle("hidden", isToday);
+    document.getElementById("moodLabel").textContent = isToday ? "今日狀態" : "當日狀態";
+    document.getElementById("saveBtn").textContent = isToday ? "儲存今日紀錄" : "儲存這天的紀錄";
+  }
+
   function renderGoodHabits() {
-    var record = getTodayRecord();
+    var record = getRecord(currentDate);
     var list = document.getElementById("goodHabitsList");
     var empty = document.getElementById("goodEmptyHint");
     list.innerHTML = "";
@@ -203,9 +221,9 @@
         var v = Number(slider.value);
         document.getElementById("val-" + id).textContent = v;
         updateSliderFill(slider);
-        var r = getTodayRecord();
+        var r = getRecord(currentDate);
         r[id] = v;
-        persistTodayRecord(r);
+        persistRecord(r);
         updateMood();
       });
     });
@@ -219,7 +237,7 @@
   }
 
   function renderBadHabits() {
-    var record = getTodayRecord();
+    var record = getRecord(currentDate);
     var list = document.getElementById("badHabitsList");
     var empty = document.getElementById("badEmptyHint");
     list.innerHTML = "";
@@ -237,16 +255,16 @@
 
     list.querySelectorAll("input[type=checkbox]").forEach(function (cb) {
       cb.addEventListener("change", function () {
-        var r = getTodayRecord();
+        var r = getRecord(currentDate);
         r[cb.dataset.id] = cb.checked;
-        persistTodayRecord(r);
+        persistRecord(r);
         updateMood();
       });
     });
   }
 
   function updateMood() {
-    var record = getTodayRecord();
+    var record = getRecord(currentDate);
     var score = computeScore(record);
     record.score = score;
     saveData();
@@ -381,8 +399,13 @@
     days.forEach(function (d) {
       var cell = document.createElement("div");
       cell.className = "heatmap-cell";
-      cell.title = d.key + (d.score !== null ? " · " + d.score + "分" : " · 無紀錄");
+      cell.title = d.key + (d.score !== null ? " · " + d.score + "分" : " · 無紀錄") + "(點擊可編輯)";
       if (d.score !== null) cell.style.background = scoreColor(d.score);
+      cell.addEventListener("click", function () {
+        currentDate = d.key;
+        renderToday();
+        switchView("today");
+      });
       grid.appendChild(cell);
     });
 
@@ -557,11 +580,11 @@
       setStatus("saveStatus", "尚未設定 Google Sheets 網址,請到「設定」頁貼上", true);
       return Promise.resolve();
     }
-    var record = getTodayRecord();
-    persistTodayRecord(record);
+    var record = getRecord(currentDate);
+    persistRecord(record);
 
     var payload = {
-      date: todayKey(),
+      date: currentDate,
       score: record.score,
       good: data.habits.good.map(function (h) { return { name: h.name, value: record[h.id] }; }),
       bad: data.habits.bad.map(function (h) { return { name: h.name, value: record[h.id] ? 1 : 0 }; })
@@ -656,6 +679,7 @@
 
   function init() {
     data = loadData();
+    currentDate = todayKey();
     setDateDisplay();
     renderToday();
 
@@ -663,12 +687,31 @@
       btn.addEventListener("click", function () { switchView(btn.dataset.view); });
     });
 
+    document.getElementById("prevDayBtn").addEventListener("click", function () {
+      var d = new Date(currentDate + "T00:00:00");
+      d.setDate(d.getDate() - 1);
+      currentDate = dateKey(d);
+      renderToday();
+    });
+    document.getElementById("nextDayBtn").addEventListener("click", function () {
+      if (currentDate >= todayKey()) return;
+      var d = new Date(currentDate + "T00:00:00");
+      d.setDate(d.getDate() + 1);
+      currentDate = dateKey(d);
+      renderToday();
+    });
+    document.getElementById("backToTodayBtn").addEventListener("click", function () {
+      currentDate = todayKey();
+      renderToday();
+    });
+
     document.getElementById("saveBtn").addEventListener("click", function () {
-      persistTodayRecord(getTodayRecord());
+      persistRecord(getRecord(currentDate));
       if (data.settings.sheetUrl) {
         syncToSheet();
       } else {
-        setStatus("saveStatus", "已儲存在本機(尚未設定 Google Sheets 同步)", false);
+        var msg = currentDate === todayKey() ? "已儲存在本機(尚未設定 Google Sheets 同步)" : "已更新這天的紀錄(尚未設定 Google Sheets 同步)";
+        setStatus("saveStatus", msg, false);
       }
     });
 
