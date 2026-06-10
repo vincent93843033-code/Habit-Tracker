@@ -28,7 +28,6 @@
   var statsChart = null;
   var statsMode = "trend";
   var chartRangeDays = 14;
-  var customRange = null;
 
   /* ---------- storage ---------- */
 
@@ -286,38 +285,12 @@
     return days;
   }
 
-  function getDaysBetween(startKey, endKey) {
-    var days = [];
-    var start = new Date(startKey + "T00:00:00");
-    var end = new Date(endKey + "T00:00:00");
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return days;
-
-    var cur = new Date(start);
-    while (cur <= end) {
-      var key = dateKey(cur);
-      var rec = data.records[key];
-      days.push({
-        key: key,
-        label: (cur.getMonth() + 1) + "/" + cur.getDate(),
-        score: rec && rec.score !== undefined ? rec.score : null
-      });
-      cur.setDate(cur.getDate() + 1);
-    }
-    return days;
-  }
-
   function getChartDays() {
-    if (customRange) return getDaysBetween(customRange.start, customRange.end);
     return getLastNDays(chartRangeDays);
   }
 
   function updateChartRangeLabel() {
-    var label = document.getElementById("chartRangeLabel");
-    if (customRange) {
-      label.textContent = customRange.start + " ～ " + customRange.end;
-    } else {
-      label.textContent = "過去 " + chartRangeDays + " 天";
-    }
+    document.getElementById("chartRangeLabel").textContent = "過去 " + chartRangeDays + " 天";
   }
 
   function renderStats() {
@@ -722,39 +695,10 @@
     document.querySelectorAll(".range-btn[data-days]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         chartRangeDays = Number(btn.dataset.days);
-        customRange = null;
         document.querySelectorAll(".range-btn").forEach(function (b) { b.classList.remove("active"); });
         btn.classList.add("active");
-        document.getElementById("customRangeRow").classList.add("hidden");
         renderStats();
       });
-    });
-
-    document.getElementById("btnCustomRange").addEventListener("click", function () {
-      document.querySelectorAll(".range-btn").forEach(function (b) { b.classList.remove("active"); });
-      this.classList.add("active");
-      var row = document.getElementById("customRangeRow");
-      row.classList.toggle("hidden");
-      var startInput = document.getElementById("rangeStart");
-      var endInput = document.getElementById("rangeEnd");
-      if (!startInput.value || !endInput.value) {
-        var end = new Date();
-        var start = new Date();
-        start.setDate(start.getDate() - 13);
-        startInput.value = dateKey(start);
-        endInput.value = dateKey(end);
-      }
-    });
-
-    document.getElementById("applyRangeBtn").addEventListener("click", function () {
-      var start = document.getElementById("rangeStart").value;
-      var end = document.getElementById("rangeEnd").value;
-      if (!start || !end || start > end) {
-        alert("請選擇正確的起訖日期(開始日期需早於或等於結束日期)");
-        return;
-      }
-      customRange = { start: start, end: end };
-      renderStats();
     });
 
     document.getElementById("saveUrlBtn").addEventListener("click", function () {
