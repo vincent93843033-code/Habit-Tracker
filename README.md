@@ -1,0 +1,119 @@
+# 習慣手帳
+
+一個走文青風的個人習慣追蹤 App(PWA),可以裝在手機桌面上像原生 App 一樣使用。
+
+- 好習慣用滑桿(0-10分)評分,壞習慣用打勾紀錄
+- 介面顏色會隨「今日分數」即時變化(橘紅 → 米白 → 草綠)
+- 統計頁有折線圖(趨勢)、圓餅圖(比例)、貢獻草地圖
+- 資料存在手機本機,並可同步到你自己的 Google Sheets
+- 習慣項目可以自行新增 / 編輯 / 刪除
+
+---
+
+## 整體架構
+
+```
+手機瀏覽器(PWA,本機儲存)  <--同步-->  Google Apps Script(Web App)  -->  你的 Google Sheet
+```
+
+App 本身是純前端網頁,部署在 GitHub Pages 上,任何人都可以安裝使用。
+但**每個人要自己準備一份 Google Sheet + Apps Script**,並把專屬的網址貼到 App 的「設定」頁,
+這樣每個人的紀錄會分別存在自己的試算表裡,不會互相混到。
+
+---
+
+## 步驟一:建立你自己的 Google Sheet 同步後端
+
+1. 到 [Google Sheets](https://sheets.google.com) 建立一個新的空白試算表,取名例如「習慣紀錄」。
+2. 點選選單「擴充功能」→「Apps Script」,會開啟一個新分頁的程式碼編輯器。
+3. 把編輯器裡預設的 `myFunction` 內容全部刪除,貼上專案中
+   [`apps-script/Code.gs`](apps-script/Code.gs) 的全部內容。
+4. 點右上角「儲存」(磁片圖示)。
+5. 點右上角「部署」→「新增部署作業」。
+   - 點擊齒輪圖示,類型選擇「網路應用程式」。
+   - 「執行身分」選**你自己**。
+   - 「誰可以存取」選**任何人**(這樣手機才能在沒有登入 Google 的瀏覽器情境下打 API)。
+   - 點「部署」,過程中會要求你授權,跳出視窗選你的帳號 → 「進階」→「前往專案(不安全)」→「允許」。
+     這個警告是因為這支腳本是你自己寫的、未經 Google 審核,屬於正常現象。
+6. 部署完成後會得到一組「網路應用程式 URL」,長得像:
+   `https://script.google.com/macros/s/AKfycb.../exec`
+   **把這串網址複製起來**,等一下要貼到 App 的設定頁。
+
+> 之後如果你修改了 `Code.gs` 的內容,要記得「部署」→「管理部署作業」→ 編輯(鉛筆圖示)→
+> 版本選「新版本」→ 部署,網址通常不會變。
+
+---
+
+## 步驟二:把 App 放到 GitHub Pages
+
+1. 到 [GitHub](https://github.com) 註冊/登入帳號。
+2. 建立一個新的 Repository(例如命名為 `habit-tracker`),設為 **Public**,
+   建立時不要勾選「Add a README」(我們已經有了)。
+3. 在你的電腦上,於 `habit-tracker` 這個資料夾(也就是這個專案的根目錄)依序執行:
+
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit: 習慣手帳 PWA"
+   git branch -M main
+   git remote add origin https://github.com/<你的帳號>/habit-tracker.git
+   git push -u origin main
+   ```
+
+4. 到 GitHub 上該 repository 的「Settings」→「Pages」。
+   - Source 選擇「Deploy from a branch」
+   - Branch 選擇 `main`,資料夾選 `/ (root)`
+   - 按「Save」
+5. 等 1~2 分鐘後,網址會出現在同一頁面,大致長得像:
+   `https://<你的帳號>.github.io/habit-tracker/`
+
+   這就是你之後安裝到手機桌面的網址。
+
+---
+
+## 步驟三:在 Pixel 手機上安裝成 App
+
+1. 用手機的 **Chrome** 開啟上面那個網址。
+2. 點右上角「⋮」選單 → 「新增至主畫面」(或「安裝應用程式」)。
+3. 確認後,桌面會出現「習慣手帳」的圖示,點開會以全螢幕、無網址列的方式呈現,跟原生 App 一樣。
+
+---
+
+## 步驟四:連接 Google Sheets
+
+1. 打開 App,點下方「設定」。
+2. 在「Apps Script 網址」欄位貼上步驟一拿到的網址,按「儲存網址」。
+3. 回到「今日」頁,調整滑桿或勾選後按「儲存今日紀錄」,或點右上角的同步圖示。
+4. 打開你的 Google Sheet,應該會看到自動產生一個「習慣紀錄」分頁,
+   第一列是欄位標題(日期、分數、各習慣名稱),之後每天會新增/更新一列。
+
+> 同一天重複按同步,會更新同一列而不會產生重複資料。
+
+---
+
+## 分享給其他人使用
+
+- App 網址(`https://<你的帳號>.github.io/habit-tracker/`)可以直接分享,
+  對方用 Chrome 打開、安裝到桌面即可。
+- 但對方需要**重複「步驟一」**,建立自己的 Google Sheet + Apps Script,
+  在自己手機的「設定」頁貼上自己的網址 —— 這樣大家的資料才會分開存放。
+
+---
+
+## 資料儲存說明 / 疑難排解
+
+- 所有習慣紀錄都先存在手機瀏覽器的本機儲存空間(localStorage),離線也能記錄。
+- 如果清除瀏覽器資料、換手機或重新安裝,本機紀錄會消失,
+  但只要曾經同步過,可以在「設定」頁按「從 Google Sheets 還原資料」把歷史紀錄抓回來。
+- 若同步一直失敗:
+  1. 確認網址是用「網路應用程式」的 `.../exec` 結尾網址,不是 Apps Script 編輯器網址。
+  2. 確認部署時「誰可以存取」設定為「任何人」。
+  3. 確認手機有網路連線。
+
+---
+
+## 之後想更新介面或功能
+
+修改 `index.html` / `style.css` / `app.js` 後,重新 commit + push 到 GitHub,
+GitHub Pages 會在 1~2 分鐘內自動更新。手機上的 PWA 下次開啟時(連網狀態下)
+會透過 Service Worker 自動抓到新版本。
