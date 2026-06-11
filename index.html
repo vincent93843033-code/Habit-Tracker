@@ -31,8 +31,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div class="day-nav-center">
-        <div class="day-nav-label" id="viewDateLabel"></div>
+        <button class="day-nav-label" id="viewDateLabel" type="button" aria-label="選擇日期"></button>
         <button class="day-nav-today hidden" id="backToTodayBtn" type="button">回到今天</button>
+        <input type="date" id="dateJumpInput" class="date-jump-input" tabindex="-1" aria-hidden="true">
       </div>
       <button class="day-nav-btn" id="nextDayBtn" aria-label="後一天">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>

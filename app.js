@@ -194,6 +194,10 @@
     document.getElementById("backToTodayBtn").classList.toggle("hidden", isToday);
     document.getElementById("moodLabel").textContent = isToday ? "今日狀態" : "當日狀態";
     document.getElementById("saveBtn").textContent = isToday ? "儲存今日紀錄" : "儲存這天的紀錄";
+
+    var jumpInput = document.getElementById("dateJumpInput");
+    jumpInput.max = todayKey();
+    jumpInput.value = currentDate;
   }
 
   function renderGoodHabits() {
@@ -702,6 +706,20 @@
     });
     document.getElementById("backToTodayBtn").addEventListener("click", function () {
       currentDate = todayKey();
+      renderToday();
+    });
+    document.getElementById("viewDateLabel").addEventListener("click", function () {
+      var input = document.getElementById("dateJumpInput");
+      if (input.showPicker) {
+        try { input.showPicker(); } catch (e) { input.click(); }
+      } else {
+        input.click();
+      }
+    });
+    document.getElementById("dateJumpInput").addEventListener("change", function (e) {
+      var val = e.target.value;
+      if (!val) return;
+      currentDate = val > todayKey() ? todayKey() : val;
       renderToday();
     });
 
