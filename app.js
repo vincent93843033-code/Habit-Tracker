@@ -194,10 +194,65 @@
     document.getElementById("backToTodayBtn").classList.toggle("hidden", isToday);
     document.getElementById("moodLabel").textContent = isToday ? "今日狀態" : "當日狀態";
     document.getElementById("saveBtn").textContent = isToday ? "儲存今日紀錄" : "儲存這天的紀錄";
+  }
 
-    var jumpInput = document.getElementById("dateJumpInput");
-    jumpInput.max = todayKey();
-    jumpInput.value = currentDate;
+  /* ---------- date picker ---------- */
+
+  var dpViewYear, dpViewMonth;
+
+  function openDatePicker() {
+    var d = new Date(currentDate + "T00:00:00");
+    dpViewYear = d.getFullYear();
+    dpViewMonth = d.getMonth();
+    renderDatePicker();
+    document.getElementById("datePickerOverlay").classList.remove("hidden");
+  }
+
+  function closeDatePicker() {
+    document.getElementById("datePickerOverlay").classList.add("hidden");
+  }
+
+  function renderDatePicker() {
+    document.getElementById("dpMonthLabel").textContent = dpViewYear + "年" + (dpViewMonth + 1) + "月";
+
+    var now = new Date();
+    document.getElementById("dpNextMonth").disabled =
+      dpViewYear === now.getFullYear() && dpViewMonth === now.getMonth();
+
+    var grid = document.getElementById("dpGrid");
+    grid.innerHTML = "";
+
+    var firstDay = new Date(dpViewYear, dpViewMonth, 1);
+    var startOffset = firstDay.getDay();
+    var daysInMonth = new Date(dpViewYear, dpViewMonth + 1, 0).getDate();
+    var tKey = todayKey();
+
+    for (var i = 0; i < startOffset; i++) {
+      var empty = document.createElement("div");
+      empty.className = "date-picker-day empty";
+      grid.appendChild(empty);
+    }
+
+    for (var day = 1; day <= daysInMonth; day++) {
+      var key = dpViewYear + "-" + String(dpViewMonth + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "date-picker-day";
+      btn.textContent = day;
+      if (key === tKey) btn.classList.add("today");
+      if (key === currentDate) btn.classList.add("selected");
+      if (key > tKey) {
+        btn.disabled = true;
+      } else {
+        btn.addEventListener("click", function () {
+          currentDate = this.dataset.key;
+          closeDatePicker();
+          renderToday();
+        });
+      }
+      btn.dataset.key = key;
+      grid.appendChild(btn);
+    }
   }
 
   function renderGoodHabits() {
@@ -708,19 +763,20 @@
       currentDate = todayKey();
       renderToday();
     });
-    document.getElementById("viewDateLabel").addEventListener("click", function () {
-      var input = document.getElementById("dateJumpInput");
-      if (input.showPicker) {
-        try { input.showPicker(); } catch (e) { input.click(); }
-      } else {
-        input.click();
-      }
+    document.getElementById("viewDateLabel").addEventListener("click", openDatePicker);
+    document.getElementById("dpPrevMonth").addEventListener("click", function () {
+      dpViewMonth--;
+      if (dpViewMonth < 0) { dpViewMonth = 11; dpViewYear--; }
+      renderDatePicker();
     });
-    document.getElementById("dateJumpInput").addEventListener("change", function (e) {
-      var val = e.target.value;
-      if (!val) return;
-      currentDate = val > todayKey() ? todayKey() : val;
-      renderToday();
+    document.getElementById("dpNextMonth").addEventListener("click", function () {
+      dpViewMonth++;
+      if (dpViewMonth > 11) { dpViewMonth = 0; dpViewYear++; }
+      renderDatePicker();
+    });
+    document.getElementById("dpCloseBtn").addEventListener("click", closeDatePicker);
+    document.getElementById("datePickerOverlay").addEventListener("click", function (e) {
+      if (e.target === this) closeDatePicker();
     });
 
     document.getElementById("saveBtn").addEventListener("click", function () {

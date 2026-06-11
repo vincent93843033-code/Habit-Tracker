@@ -33,7 +33,6 @@
       <div class="day-nav-center">
         <button class="day-nav-label" id="viewDateLabel" type="button" aria-label="選擇日期"></button>
         <button class="day-nav-today hidden" id="backToTodayBtn" type="button">回到今天</button>
-        <input type="date" id="dateJumpInput" class="date-jump-input" tabindex="-1" aria-hidden="true">
       </div>
       <button class="day-nav-btn" id="nextDayBtn" aria-label="後一天">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -190,6 +189,25 @@
       設定
     </button>
   </nav>
+
+  <div class="date-picker-overlay hidden" id="datePickerOverlay">
+    <div class="date-picker">
+      <div class="date-picker-header">
+        <button class="day-nav-btn" id="dpPrevMonth" type="button" aria-label="上個月">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="date-picker-title" id="dpMonthLabel"></div>
+        <button class="day-nav-btn" id="dpNextMonth" type="button" aria-label="下個月">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="date-picker-weekdays">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="date-picker-grid" id="dpGrid"></div>
+      <button class="secondary-btn" id="dpCloseBtn" type="button">取消</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

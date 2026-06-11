@@ -100,22 +100,23 @@ html, body {
 .day-nav-btn:active { transform: scale(0.96); }
 .day-nav-btn:disabled { opacity: 0.3; cursor: default; }
 .day-nav-center {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
 }
 .day-nav-label {
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-dark);
   border: none;
   background: transparent;
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: 8px;
   cursor: pointer;
-  font-family: inherit;
 }
 .day-nav-label:active { background: var(--bg-soft); }
 .day-nav-today {
@@ -127,16 +128,84 @@ html, body {
   padding: 0;
   cursor: pointer;
 }
-.date-jump-input {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 0;
-  height: 0;
-  padding: 0;
+
+/* ---------- Date picker ---------- */
+.date-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(61, 57, 41, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+.date-picker {
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  max-width: 320px;
+}
+.date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.date-picker-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+.date-picker-weekdays,
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.date-picker-weekdays {
+  margin-bottom: 4px;
+}
+.date-picker-weekdays span {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.date-picker-day {
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
   border: none;
-  opacity: 0;
-  pointer-events: none;
+  cursor: pointer;
+}
+.date-picker-day:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+.date-picker-day.selected {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.date-picker-day.today:not(.selected) {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.date-picker-day.empty {
+  visibility: hidden;
+}
+.date-picker .secondary-btn {
+  margin-top: 12px;
 }
 
 /* ---------- Mood banner ---------- */
